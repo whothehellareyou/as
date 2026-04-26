@@ -1,8 +1,9 @@
 --[[
-    PeleccosSoftwares UI v12.5
+    PeleccosSoftwares UI v12.7
     BETA VERSION STILL NOT KNOWN BUGS MAY EXIST
     + Zexir.Hook V7 extensions
-    MODIFIED: Category tabs moved to left sidebar inside the main window
+    MODIFIED: Category tabs + Settings + Configs moved to top tab bar inside main window
+              Top bar (BAR) completely removed
 ]]
 
 local Players      = game:GetService("Players")
@@ -352,32 +353,8 @@ function Peleccos:CreateWindow(o)
         _ovActive=f; fn(f)
     end
 
-    -- =========================================================
-    -- TOP BAR — now only holds watermark, Configs, Settings
-    -- Category tabs have moved into the main window's sidebar
-    -- =========================================================
-    local BAR_H = 34
-    local BAR = mk("Frame",{Name="Bar", Size=dim2(1,0,0,BAR_H), Position=dim2(0,0,0,0), BackgroundColor3=rgb(8,8,10), BorderSizePixel=0, ZIndex=50, Parent=SG})
-    local barLine = mk("Frame",{Size=dim2(1,0,0,1), AnchorPoint=Vector2.new(0,1), Position=dim2(0,0,1,0), BackgroundColor3=AC, ZIndex=51, Parent=BAR})
-    onAC(function(c) barLine.BackgroundColor3=c end)
-
-    local EGG_BTN = mk("TextButton",{Text="Easter Egg", TextColor3=C.t0, TextSize=10, Font=Enum.Font.GothamSemibold, BackgroundColor3=C.bg4, AutomaticSize=Enum.AutomaticSize.X, Size=dim2(0,0,0,BAR_H-6), Position=dim2(0,3,0,3), AutoButtonColor=false, BorderSizePixel=0, ZIndex=52, Visible=false, Parent=BAR})
-    corner(EGG_BTN,RC.sharp); stroke(EGG_BTN,C.br0,1); padding(EGG_BTN,0,8,0,8)
-    EGG_BTN.MouseEnter:Connect(function() tw(EGG_BTN,{BackgroundColor3=C.bg3},Enum.EasingStyle.Quint,0.1) end)
-    EGG_BTN.MouseLeave:Connect(function() tw(EGG_BTN,{BackgroundColor3=C.bg4},Enum.EasingStyle.Quint,0.1) end)
-
-    local CFGWIN_BTN = mk("TextButton",{Text="Configs", TextColor3=C.t1, TextSize=10, Font=Enum.Font.GothamSemibold, BackgroundColor3=C.bg4, Size=dim2(0,58,0,BAR_H-6), Position=dim2(1,-128,0,3), AutoButtonColor=false, BorderSizePixel=0, ZIndex=52, Parent=BAR})
-    corner(CFGWIN_BTN,RC.sharp); stroke(CFGWIN_BTN,C.br0,1)
-    CFGWIN_BTN.MouseEnter:Connect(function() tw(CFGWIN_BTN,{BackgroundColor3=C.bg3,TextColor3=C.t0},Enum.EasingStyle.Quint,0.1) end)
-    CFGWIN_BTN.MouseLeave:Connect(function() tw(CFGWIN_BTN,{BackgroundColor3=C.bg4,TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
-
-    local SET_BTN = mk("TextButton",{Text="Settings", TextColor3=C.t1, TextSize=10, Font=Enum.Font.GothamSemibold, BackgroundColor3=C.bg4, Size=dim2(0,62,0,BAR_H-6), Position=dim2(1,-65,0,3), AutoButtonColor=false, BorderSizePixel=0, ZIndex=52, Parent=BAR})
-    corner(SET_BTN,RC.sharp); stroke(SET_BTN,C.br0,1)
-    SET_BTN.MouseEnter:Connect(function() tw(SET_BTN,{BackgroundColor3=C.bg3,TextColor3=C.t0},Enum.EasingStyle.Quint,0.1) end)
-    SET_BTN.MouseLeave:Connect(function() tw(SET_BTN,{BackgroundColor3=C.bg4,TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
-
-    -- Watermark
-    local WM = mk("Frame",{Name="Watermark", Size=dim2(0,10,0,20), AutomaticSize=Enum.AutomaticSize.X, Position=dim2(0,8,0,BAR_H+5), BackgroundColor3=rgb(8,8,10), BackgroundTransparency=0.10, BorderSizePixel=0, ZIndex=30, Parent=SG})
+    -- Watermark (floating, no top bar)
+    local WM = mk("Frame",{Name="Watermark", Size=dim2(0,10,0,20), AutomaticSize=Enum.AutomaticSize.X, Position=dim2(0,8,0,8), BackgroundColor3=rgb(8,8,10), BackgroundTransparency=0.10, BorderSizePixel=0, ZIndex=30, Parent=SG})
     stroke(WM,C.br1,1)
     local wmRow = mk("Frame",{Size=dim2(1,0,1,0),AutomaticSize=Enum.AutomaticSize.X,BackgroundTransparency=1,ZIndex=31,Parent=WM})
     padding(wmRow,0,7,0,7); layout(wmRow,Enum.FillDirection.Horizontal,0,Enum.HorizontalAlignment.Left,Enum.VerticalAlignment.Center)
@@ -398,72 +375,116 @@ function Peleccos:CreateWindow(o)
         pcall(function() wmLabels.fps.Text=tostring(_fps).."fps"; wmLabels.ping.Text=tostring(_ping).."ms" end)
     end)
 
-    -- =========================================================
-    -- MAIN WINDOW
-    -- =========================================================
-    local SIDEBAR_W = 90   -- width of the left tab sidebar
+    local TAB_BAR_H = 28
 
-    local BG, BG_IMG = buildWindow(SG,dim2(0,500,0,380),dim2(0,300,0,BAR_H+30),2,BG_IMAGE,onAC)
+    local BG, BG_IMG = buildWindow(SG,dim2(0,500,0,380),dim2(0,300,0,20),2,BG_IMAGE,onAC)
     BG.Name = "MainWindow"
     task.defer(function()
         local sv=SG.AbsoluteSize
         local winW=math.max(math.floor(sv.X*0.33),360)
-        local winH=math.max(math.floor((sv.Y-BAR_H)*0.84),280)
+        local winH=math.max(math.floor(sv.Y*0.84),280)
         BG.Size=dim2(0,winW,0,winH)
-        BG.Position=dim2(0,math.floor(sv.X*0.35),0,BAR_H+math.floor((sv.Y-BAR_H)*0.09))
+        BG.Position=dim2(0,math.floor(sv.X*0.35),0,math.floor(sv.Y*0.05))
     end)
 
-    -- Drag handle sits in the top strip of the window (above sidebar/content)
+    local WIN_TABBAR = mk("Frame",{
+        Name="WinTabBar",
+        Size=dim2(1,0,0,TAB_BAR_H),
+        Position=dim2(0,0,0,0),
+        BackgroundColor3=rgb(0,0,0),
+        BackgroundTransparency=0.45,
+        ZIndex=5,
+        Parent=BG_IMG,
+    })
+    local tabBarAccLine = mk("Frame",{Size=dim2(1,0,0,1), AnchorPoint=Vector2.new(0,1), Position=dim2(0,0,1,0), BackgroundColor3=AC, ZIndex=6, Parent=WIN_TABBAR})
+    onAC(function(c) tabBarAccLine.BackgroundColor3=c end)
+
+    local WIN_TITLE = mk("TextLabel",{
+        Text=CFG.ScriptName,
+        Size=dim2(0,110,1,0),
+        Position=dim2(0,6,0,0),
+        BackgroundTransparency=1,
+        TextColor3=AC,
+        TextSize=11,
+        Font=Enum.Font.GothamBold,
+        TextXAlignment=Enum.TextXAlignment.Left,
+        ZIndex=6,
+        Parent=WIN_TABBAR,
+    })
+    onAC(function(c) WIN_TITLE.TextColor3=c end)
+
     local mainDragHandle = mk("TextButton",{
-        Size=dim2(1,0,0,28), Position=dim2(0,0,0,0),
-        BackgroundTransparency=1, Text="", AutoButtonColor=false, ZIndex=8, Parent=BG_IMG,
+        Size=dim2(1,0,1,0),
+        BackgroundTransparency=1,
+        Text="",
+        AutoButtonColor=false,
+        ZIndex=5,
+        Parent=WIN_TABBAR,
     })
     draggify(BG, mainDragHandle)
 
-    -- Title label in the window header
-    local WIN_HDR = mk("Frame",{
-        Size=dim2(1,0,0,28), Position=dim2(0,0,0,0),
-        BackgroundColor3=rgb(0,0,0), BackgroundTransparency=0.50, ZIndex=5, Parent=BG_IMG
+    local CFGWIN_BTN = mk("TextButton",{
+        Text="Configs",
+        TextColor3=C.t1, TextSize=10, Font=Enum.Font.GothamSemibold,
+        BackgroundColor3=C.bg4,
+        Size=dim2(0,54,0,TAB_BAR_H-6),
+        Position=dim2(1,-120,0,3),
+        AutoButtonColor=false, BorderSizePixel=0, ZIndex=8,
+        Parent=WIN_TABBAR,
     })
-    local winHdrAcc = mk("Frame",{Size=dim2(1,0,0,1), AnchorPoint=Vector2.new(0,1), Position=dim2(0,0,1,0), BackgroundColor3=AC, ZIndex=6, Parent=WIN_HDR})
-    onAC(function(c) winHdrAcc.BackgroundColor3=c end)
-    mk("TextLabel",{
-        Text=CFG.ScriptName, Size=dim2(1,0,1,0), Position=dim2(0,10,0,0),
-        BackgroundTransparency=1, TextColor3=AC, TextSize=11, Font=Enum.Font.GothamBold,
-        TextXAlignment=Enum.TextXAlignment.Left, ZIndex=6, Parent=WIN_HDR
+    corner(CFGWIN_BTN,RC.sharp); stroke(CFGWIN_BTN,C.br0,1)
+    CFGWIN_BTN.MouseEnter:Connect(function() tw(CFGWIN_BTN,{BackgroundColor3=C.bg3,TextColor3=C.t0},Enum.EasingStyle.Quint,0.1) end)
+    CFGWIN_BTN.MouseLeave:Connect(function() tw(CFGWIN_BTN,{BackgroundColor3=C.bg4,TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
+
+    local SET_BTN = mk("TextButton",{
+        Text="Settings",
+        TextColor3=C.t1, TextSize=10, Font=Enum.Font.GothamSemibold,
+        BackgroundColor3=C.bg4,
+        Size=dim2(0,58,0,TAB_BAR_H-6),
+        Position=dim2(1,-61,0,3),
+        AutoButtonColor=false, BorderSizePixel=0, ZIndex=8,
+        Parent=WIN_TABBAR,
     })
-    onAC(function(c)
-        for _,v in ipairs(WIN_HDR:GetChildren()) do
-            if v:IsA("TextLabel") then v.TextColor3=c end
-        end
+    corner(SET_BTN,RC.sharp); stroke(SET_BTN,C.br0,1)
+    SET_BTN.MouseEnter:Connect(function() tw(SET_BTN,{BackgroundColor3=C.bg3,TextColor3=C.t0},Enum.EasingStyle.Quint,0.1) end)
+    SET_BTN.MouseLeave:Connect(function() tw(SET_BTN,{BackgroundColor3=C.bg4,TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
+
+    local EGG_BTN = mk("TextButton",{
+        Text="Easter Egg", TextColor3=C.t0, TextSize=10, Font=Enum.Font.GothamSemibold,
+        BackgroundColor3=C.bg4, AutomaticSize=Enum.AutomaticSize.X,
+        Size=dim2(0,0,0,TAB_BAR_H-6),
+        Position=dim2(1,-186,0,3),
+        AutoButtonColor=false, BorderSizePixel=0, ZIndex=8, Visible=false,
+        Parent=WIN_TABBAR,
+    })
+    corner(EGG_BTN,RC.sharp); stroke(EGG_BTN,C.br0,1); padding(EGG_BTN,0,8,0,8)
+    EGG_BTN.MouseEnter:Connect(function() tw(EGG_BTN,{BackgroundColor3=C.bg3},Enum.EasingStyle.Quint,0.1) end)
+    EGG_BTN.MouseLeave:Connect(function() tw(EGG_BTN,{BackgroundColor3=C.bg4},Enum.EasingStyle.Quint,0.1) end)
+
+    local TAB_SCROLL = mk("ScrollingFrame",{
+        Name="TabScroll",
+        Size=dim2(1,-298,1,0),
+        Position=dim2(0,114,0,0),
+        BackgroundTransparency=1,
+        ScrollBarThickness=0,
+        CanvasSize=dim2(0,0,1,0),
+        ScrollingDirection=Enum.ScrollingDirection.X,
+        ZIndex=7,
+        Parent=WIN_TABBAR,
+    })
+    local tabRowLL = layout(TAB_SCROLL, Enum.FillDirection.Horizontal, 3, Enum.HorizontalAlignment.Left, Enum.VerticalAlignment.Center)
+    padding(TAB_SCROLL,3,3,3,0)
+    tabRowLL:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        task.defer(function()
+            if TAB_SCROLL and TAB_SCROLL.Parent then
+                TAB_SCROLL.CanvasSize = dim2(0, tabRowLL.AbsoluteContentSize.X + 6, 1, 0)
+            end
+        end)
     end)
 
-    -- =========================================================
-    -- LEFT SIDEBAR — category tab buttons live here
-    -- =========================================================
-    local SIDEBAR = mk("Frame",{
-        Name = "Sidebar",
-        Size = dim2(0, SIDEBAR_W, 1, -28),
-        Position = dim2(0, 0, 0, 28),
-        BackgroundColor3 = rgb(0,0,0),
-        BackgroundTransparency = 0.55,
-        ZIndex = 5,
-        Parent = BG_IMG
-    })
-    -- Right border line on the sidebar
-    mk("Frame",{
-        Size=dim2(0,1,1,0), Position=dim2(1,-1,0,0),
-        BackgroundColor3=C.br1, ZIndex=6, Parent=SIDEBAR
-    })
-    local sidebarLL = layout(SIDEBAR, Enum.FillDirection.Vertical, 4)
-    padding(SIDEBAR, 6, 4, 6, 4)
-
-    -- =========================================================
-    -- CONTENT AREA — to the right of the sidebar
-    -- =========================================================
     local CONTENT = mk("ScrollingFrame",{
-        Size = dim2(1, -(SIDEBAR_W+8), 1, -36),
-        Position = dim2(0, SIDEBAR_W+4, 0, 32),
+        Size = dim2(1,-8, 1, -(TAB_BAR_H+8)),
+        Position = dim2(0,4, 0, TAB_BAR_H+4),
         BackgroundTransparency = 1,
         ScrollBarThickness = 2,
         ScrollBarImageColor3 = AC,
@@ -497,14 +518,31 @@ function Peleccos:CreateWindow(o)
         local lbl=mk("TextLabel",{Text=title:upper(),Size=dim2(1,-5,1,0),BackgroundTransparency=1,TextColor3=AC,TextSize=9,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=f}); onAC(function(c) lbl.TextColor3=c end)
     end
     local function swRow(h) local r=mk("Frame",{Size=dim2(1,0,0,h or 24),BackgroundColor3=C.bg3,BackgroundTransparency=0.38,ZIndex=105,Parent=SW_SF}); corner(r,RC.soft); return r end
-    local function swToggle(lbl_text,default,onChange)
+    local function swToggle(lbl_text,default,onChange,flag)
         local r=swRow(24); mk("TextLabel",{Text=lbl_text,Size=dim2(1,-46,1,0),Position=dim2(0,6,0,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=r})
         local val=default==true; local track=mk("Frame",{Size=dim2(0,30,0,13),Position=dim2(1,-34,.5,-6.5),BackgroundColor3=val and AC or C.bg4,ZIndex=106,Parent=r}); corner(track,RC.pill)
         local knob=mk("Frame",{Size=dim2(0,10,0,10),Position=val and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5),BackgroundColor3=C.t0,ZIndex=107,Parent=track}); corner(knob,RC.pill)
         onAC(function(c) if val then track.BackgroundColor3=c end end)
         local tbtn=mk("TextButton",{Size=dim2(1,0,1,0),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=108,Parent=r})
-        tbtn.MouseButton1Click:Connect(function() val=not val; tw(track,{BackgroundColor3=val and AC or C.bg4},Enum.EasingStyle.Quint,0.18); tw(knob,{Position=val and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2); if onChange then onChange(val) end end)
-        return {Get=function() return val end}
+        tbtn.MouseButton1Click:Connect(function()
+            val=not val
+            tw(track,{BackgroundColor3=val and AC or C.bg4},Enum.EasingStyle.Quint,0.18)
+            tw(knob,{Position=val and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2)
+            if onChange then onChange(val) end
+        end)
+        local ret={Get=function() return val end}
+        if flag then
+            CFGSYS.register(flag,
+                function() return val end,
+                function(v)
+                    val=v
+                    tw(track,{BackgroundColor3=v and AC or C.bg4},Enum.EasingStyle.Quint,0.18)
+                    tw(knob,{Position=v and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2)
+                    if onChange then onChange(v) end
+                end,
+                "bool")
+        end
+        return ret
     end
     local function swButton(txt,cb)
         local r=swRow(24); local lbl=mk("TextLabel",{Text=txt,Size=dim2(1,0,1,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.GothamSemibold,ZIndex=106,Parent=r})
@@ -513,20 +551,39 @@ function Peleccos:CreateWindow(o)
         hb.MouseLeave:Connect(function() tw(r,{BackgroundTransparency=0.38},Enum.EasingStyle.Quint,0.1); tw(lbl,{TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
         hb.MouseButton1Click:Connect(function() tw(lbl,{TextColor3=AC},Enum.EasingStyle.Quint,0.08); task.delay(0.15,function() tw(lbl,{TextColor3=C.t1},Enum.EasingStyle.Quint,0.12) end); if cb then cb() end end); return r
     end
-    local function swColorRow(lbl_text,defCol,onChange)
+    local function swColorRow(lbl_text,defCol,onChange,flag)
         local r=swRow(24); mk("TextLabel",{Text=lbl_text,Size=dim2(1,-42,1,0),Position=dim2(0,6,0,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=r})
         local col=defCol; local h,s,v=Color3.toHSV(col)
         local sw2=mk("TextButton",{Size=dim2(0,30,0,16),Position=dim2(1,-34,.5,-8),BackgroundColor3=col,Text="",AutoButtonColor=false,ZIndex=106,Parent=r}); corner(sw2,RC.soft); stroke(sw2,C.br2,1)
         local openPick=false
-        sw2.MouseButton1Click:Connect(function() openPick=not openPick; if openPick then openOV(function(ov) buildColorPicker(ov,sw2,h,s,v,function(nc,nh,ns,nv) col=nc;h,s,v=nh,ns,nv;sw2.BackgroundColor3=nc; if onChange then onChange(nc) end end,SG) end) else closeOV() end end)
+        sw2.MouseButton1Click:Connect(function()
+            openPick=not openPick
+            if openPick then
+                openOV(function(ov)
+                    buildColorPicker(ov,sw2,h,s,v,function(nc,nh,ns,nv)
+                        col=nc;h,s,v=nh,ns,nv;sw2.BackgroundColor3=nc
+                        if onChange then onChange(nc) end
+                    end,SG)
+                end)
+            else closeOV() end
+        end)
+        if flag then
+            CFGSYS.register(flag,
+                function() return col end,
+                function(c2)
+                    col=c2; h,s,v=Color3.toHSV(c2); sw2.BackgroundColor3=c2
+                    if onChange then onChange(c2) end
+                end,
+                "color")
+        end
         return {Get=function() return col end}
     end
 
     swSection("Appearance")
-    swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end)
-    swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end)
+    swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end, "settings_accentColor")
+    swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end, "settings_bgTint")
     swSection("Watermark")
-    swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end)
+    swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end, "settings_showWatermark")
     swSection("Copy")
     swButton("Copy Username",    function() pcall(function() setclipboard(LP.Name) end);               notify({Title="Copied",Desc="Username copied.",Type="Success",Duration=2}) end)
     swButton("Copy User ID",     function() pcall(function() setclipboard(tostring(LP.UserId)) end);   notify({Title="Copied",Desc="User ID copied.",Type="Success",Duration=2}) end)
@@ -592,7 +649,6 @@ function Peleccos:CreateWindow(o)
     SET_BTN.MouseButton1Click:Connect(function() SW.Visible=not SW.Visible; if SW.Visible then CFGW.Visible=false end end)
     CFGWIN_BTN.MouseButton1Click:Connect(function() CFGW.Visible=not CFGW.Visible; if CFGW.Visible then SW.Visible=false;refreshCfgList() end end)
 
-    -- Easter egg scanner
     local _eggActive=false
     task.spawn(function()
         while SG and SG.Parent do
@@ -630,7 +686,7 @@ function Peleccos:CreateWindow(o)
     local _vis=true
     UIS.InputBegan:Connect(function(i,gpe)
         if not gpe and i.KeyCode==KEY then
-            _vis=not _vis; BG.Visible=_vis; BAR.Visible=_vis
+            _vis=not _vis; BG.Visible=_vis
             if not _vis then SW.Visible=false;CFGW.Visible=false end
         end
     end)
@@ -642,39 +698,37 @@ function Peleccos:CreateWindow(o)
     function WO:AddCategory(name)
         local isFirst = #self._categories == 0
 
-        -- =====================================================
-        -- SIDEBAR TAB BUTTON (replaces the old top-bar button)
-        -- =====================================================
         local catBtn = mk("TextButton", {
-            Text              = name,
-            Size              = dim2(1, 0, 0, 26),
-            BackgroundColor3  = isFirst and AC or C.bg3,
-            TextColor3        = isFirst and C.t0 or C.t2,
-            TextSize          = 10,
-            Font              = Enum.Font.GothamSemibold,
-            AutoButtonColor   = false,
-            BorderSizePixel   = 0,
-            ZIndex            = 7,
-            LayoutOrder       = #self._categories + 1,
-            Parent            = SIDEBAR,
+            Text             = name,
+            Size             = dim2(0, 0, 1, -6),
+            AutomaticSize    = Enum.AutomaticSize.X,
+            BackgroundColor3 = isFirst and AC or C.bg3,
+            TextColor3       = isFirst and C.t0 or C.t2,
+            TextSize         = 10,
+            Font             = Enum.Font.GothamSemibold,
+            AutoButtonColor  = false,
+            BorderSizePixel  = 0,
+            ZIndex           = 9,
+            LayoutOrder      = #self._categories + 1,
+            Parent           = TAB_SCROLL,
         })
-        corner(catBtn, RC.soft)
-        -- Accent left bar on active tab
+        corner(catBtn, RC.sharp)
+        padding(catBtn, 0, 8, 0, 8)
+
         local tabAccBar = mk("Frame", {
-            Size             = dim2(0, 3, 1, 0),
-            Position         = dim2(0, 0, 0, 0),
+            Size             = dim2(1, 0, 0, 2),
+            AnchorPoint      = Vector2.new(0, 1),
+            Position         = dim2(0, 0, 1, 0),
             BackgroundColor3 = AC,
             BackgroundTransparency = isFirst and 0 or 1,
-            ZIndex           = 8,
+            ZIndex           = 10,
             Parent           = catBtn,
         })
-        corner(tabAccBar, RC.sharp)
         onAC(function(c)
             tabAccBar.BackgroundColor3 = c
             if self._activeCat == CAT then catBtn.BackgroundColor3 = c end
         end)
 
-        -- Content panel (shown/hidden per active tab)
         local catPanel = mk("Frame", {
             Size              = dim2(1, 0, 0, 0),
             AutomaticSize     = Enum.AutomaticSize.Y,
@@ -711,9 +765,6 @@ function Peleccos:CreateWindow(o)
             if self._activeCat ~= CAT then tw(catBtn, {BackgroundColor3=C.bg3, TextColor3=C.t2}, Enum.EasingStyle.Quint, 0.1) end
         end)
 
-        -- =====================================================
-        -- All element builder functions below are unchanged
-        -- =====================================================
         local function mkRow(h)
             local r = mk("Frame",{Size=dim2(1,0,0,h or 30),BackgroundColor3=C.bg2,BackgroundTransparency=0.42,ZIndex=6,Parent=catPanel})
             corner(r,RC.sharp); stroke(r,C.br0,1); return r
@@ -997,12 +1048,19 @@ function Peleccos:CreateWindow(o)
     end
 
     function WO:SetAccent(c) AC=c;fireAC() end
-    function WO:Toggle() _vis=not _vis;BG.Visible=_vis;BAR.Visible=_vis;if not _vis then SW.Visible=false;CFGW.Visible=false end end
+    function WO:Toggle() _vis=not _vis;BG.Visible=_vis;if not _vis then SW.Visible=false;CFGW.Visible=false end end
     function WO:Destroy() SG:Destroy() end
     function WO:SetBackground(id) BG_IMG.Image=id;SW_IMG.Image=id;CFGW_IMG.Image=id end
     function WO:SetConfigName(n) CFG.ConfigName=n;wmLabels.config.Text=n end
     function WO:SaveConfig(n) return CFGSYS.save(n or CFG.ConfigName) end
     function WO:LoadConfig(n) return CFGSYS.load(n or CFG.ConfigName) end
+
+    -- Settings change callbacks (for Zexir.Hook V7 § 25b compatibility)
+    local _settingCBs = {}
+    function WO:OnSettingChanged(name, fn)
+        if not _settingCBs[name] then _settingCBs[name] = {} end
+        table.insert(_settingCBs[name], fn)
+    end
 
     return WO
 end
