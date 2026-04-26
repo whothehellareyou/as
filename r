@@ -1,5 +1,5 @@
 --[[
-    PeleccosSoftwares UI v12.8
+    PeleccosSoftwares UI v12.9
     BETA VERSION STILL NOT KNOWN BUGS MAY EXIST
     + Zexir.Hook V7 extensions
     MODIFIED: Category tabs + Settings + Configs moved to top tab bar inside main window
@@ -282,18 +282,27 @@ local function makeConfigSystem(scriptName)
         if not ok or type(data)~="table" then return false end
         for flag, val in pairs(data) do
             local info=_flags[flag]
-            if info then pcall(function()
+            if info then
                 local ftype=info.ftype
-                if     ftype=="bool"   then info.set(val=="true")
-                elseif ftype=="number" then info.set(tonumber(val) or 0)
-                elseif ftype=="color"  then local r,g,b=val:match("(%d+),(%d+),(%d+)"); if r then info.set(rgb(tonumber(r),tonumber(g),tonumber(b))) end
-                elseif ftype=="key"    then
-                    if val=="Mouse1" then info.set(Enum.UserInputType.MouseButton1)
-                    elseif val=="Mouse2" then info.set(Enum.UserInputType.MouseButton2)
-                    elseif val=="Mouse3" then info.set(Enum.UserInputType.MouseButton3)
+                if ftype=="bool" then
+                    pcall(info.set, val=="true")
+                elseif ftype=="number" then
+                    pcall(info.set, tonumber(val) or 0)
+                elseif ftype=="color" then
+                    local sv = tostring(val)
+                    local r,g,b = sv:match("(%d+),(%d+),(%d+)")
+                    if r and g and b then
+                        pcall(info.set, rgb(tonumber(r), tonumber(g), tonumber(b)))
+                    end
+                elseif ftype=="key" then
+                    if val=="Mouse1" then pcall(info.set, Enum.UserInputType.MouseButton1)
+                    elseif val=="Mouse2" then pcall(info.set, Enum.UserInputType.MouseButton2)
+                    elseif val=="Mouse3" then pcall(info.set, Enum.UserInputType.MouseButton3)
                     else pcall(function() info.set(Enum.KeyCode[val]) end) end
-                else                        info.set(val) end
-            end) end
+                else
+                    pcall(info.set, val)
+                end
+            end
         end
         return true
     end
@@ -560,10 +569,12 @@ function Peleccos:CreateWindow(o)
         return {Get=function() return col end, SetCol=setCol}
     end
 
+    local CFGW_IMG_REF = nil  -- pre-declared so Background Tint closure can reference it; assigned once ConfigWin is built below
+
     swSection("Appearance")
     local _swAC = swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end)
     CFGSYS.register("settings_accentColor", function() return _swAC.Get() end, function(c) _swAC.SetCol(c) end, "color")
-    local _swBG = swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end)
+    local _swBG = swColorRow("Background Tint",rgb(6,6,8),function(c) BG_IMG.BackgroundColor3=c; SW_IMG.BackgroundColor3=c; if CFGW_IMG_REF then CFGW_IMG_REF.BackgroundColor3=c end end)
     CFGSYS.register("settings_bgTint", function() return _swBG.Get() end, function(c) _swBG.SetCol(c) end, "color")
     swSection("Watermark")
     local _swWM = swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end)
@@ -581,7 +592,8 @@ function Peleccos:CreateWindow(o)
     unloadBtn.MouseButton1Click:Connect(function() notify({Title="Unloading",Desc="Removing script...",Type="Warning",Duration=2}); task.delay(.5,function() pcall(function() SG:Destroy() end) end) end)
 
     -- CONFIG MANAGER WINDOW
-    local CFGW, CFGW_IMG = buildWindow(SG,dim2(0,280,0,370),dim2(.5,-290,.5,-185),110,BG_IMAGE,onAC)
+    local CFGW; CFGW, CFGW_IMG_REF = buildWindow(SG,dim2(0,280,0,370),dim2(.5,-290,.5,-185),110,BG_IMAGE,onAC)
+    local CFGW_IMG = CFGW_IMG_REF
     CFGW.Name="ConfigWin"; CFGW.Visible=false
     local CFGW_HDR=mk("Frame",{Size=dim2(1,0,0,26),BackgroundColor3=rgb(0,0,0),BackgroundTransparency=0.40,ZIndex=114,Parent=CFGW_IMG})
     local cfgAcc=mk("Frame",{Size=dim2(1,0,0,1),AnchorPoint=Vector2.new(0,1),Position=dim2(0,0,1,0),BackgroundColor3=AC,ZIndex=115,Parent=CFGW_HDR}); onAC(function(c) cfgAcc.BackgroundColor3=c end)
