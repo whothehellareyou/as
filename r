@@ -1,5 +1,5 @@
 --[[
-    PeleccosSoftwares UI v12.7
+    PeleccosSoftwares UI v12.8
     BETA VERSION STILL NOT KNOWN BUGS MAY EXIST
     + Zexir.Hook V7 extensions
     MODIFIED: Category tabs + Settings + Configs moved to top tab bar inside main window
@@ -518,31 +518,20 @@ function Peleccos:CreateWindow(o)
         local lbl=mk("TextLabel",{Text=title:upper(),Size=dim2(1,-5,1,0),BackgroundTransparency=1,TextColor3=AC,TextSize=9,Font=Enum.Font.GothamBold,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=f}); onAC(function(c) lbl.TextColor3=c end)
     end
     local function swRow(h) local r=mk("Frame",{Size=dim2(1,0,0,h or 24),BackgroundColor3=C.bg3,BackgroundTransparency=0.38,ZIndex=105,Parent=SW_SF}); corner(r,RC.soft); return r end
-    local function swToggle(lbl_text,default,onChange,flag)
+    local function swToggle(lbl_text,default,onChange)
         local r=swRow(24); mk("TextLabel",{Text=lbl_text,Size=dim2(1,-46,1,0),Position=dim2(0,6,0,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=r})
         local val=default==true; local track=mk("Frame",{Size=dim2(0,30,0,13),Position=dim2(1,-34,.5,-6.5),BackgroundColor3=val and AC or C.bg4,ZIndex=106,Parent=r}); corner(track,RC.pill)
         local knob=mk("Frame",{Size=dim2(0,10,0,10),Position=val and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5),BackgroundColor3=C.t0,ZIndex=107,Parent=track}); corner(knob,RC.pill)
         onAC(function(c) if val then track.BackgroundColor3=c end end)
         local tbtn=mk("TextButton",{Size=dim2(1,0,1,0),BackgroundTransparency=1,Text="",AutoButtonColor=false,ZIndex=108,Parent=r})
-        tbtn.MouseButton1Click:Connect(function()
-            val=not val
-            tw(track,{BackgroundColor3=val and AC or C.bg4},Enum.EasingStyle.Quint,0.18)
-            tw(knob,{Position=val and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2)
-            if onChange then onChange(val) end
-        end)
-        local ret={Get=function() return val end}
-        if flag then
-            CFGSYS.register(flag,
-                function() return val end,
-                function(v)
-                    val=v
-                    tw(track,{BackgroundColor3=v and AC or C.bg4},Enum.EasingStyle.Quint,0.18)
-                    tw(knob,{Position=v and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2)
-                    if onChange then onChange(v) end
-                end,
-                "bool")
+        local function setVal(v)
+            val=v
+            tw(track,{BackgroundColor3=v and AC or C.bg4},Enum.EasingStyle.Quint,0.18)
+            tw(knob,{Position=v and dim2(1,-12,.5,-5) or dim2(0,2,.5,-5)},Enum.EasingStyle.Back,0.2)
+            if onChange then onChange(v) end
         end
-        return ret
+        tbtn.MouseButton1Click:Connect(function() setVal(not val) end)
+        return {Get=function() return val end, SetVal=setVal}
     end
     local function swButton(txt,cb)
         local r=swRow(24); local lbl=mk("TextLabel",{Text=txt,Size=dim2(1,0,1,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.GothamSemibold,ZIndex=106,Parent=r})
@@ -551,11 +540,12 @@ function Peleccos:CreateWindow(o)
         hb.MouseLeave:Connect(function() tw(r,{BackgroundTransparency=0.38},Enum.EasingStyle.Quint,0.1); tw(lbl,{TextColor3=C.t1},Enum.EasingStyle.Quint,0.1) end)
         hb.MouseButton1Click:Connect(function() tw(lbl,{TextColor3=AC},Enum.EasingStyle.Quint,0.08); task.delay(0.15,function() tw(lbl,{TextColor3=C.t1},Enum.EasingStyle.Quint,0.12) end); if cb then cb() end end); return r
     end
-    local function swColorRow(lbl_text,defCol,onChange,flag)
+    local function swColorRow(lbl_text,defCol,onChange)
         local r=swRow(24); mk("TextLabel",{Text=lbl_text,Size=dim2(1,-42,1,0),Position=dim2(0,6,0,0),BackgroundTransparency=1,TextColor3=C.t1,TextSize=11,Font=Enum.Font.Gotham,TextXAlignment=Enum.TextXAlignment.Left,ZIndex=106,Parent=r})
         local col=defCol; local h,s,v=Color3.toHSV(col)
         local sw2=mk("TextButton",{Size=dim2(0,30,0,16),Position=dim2(1,-34,.5,-8),BackgroundColor3=col,Text="",AutoButtonColor=false,ZIndex=106,Parent=r}); corner(sw2,RC.soft); stroke(sw2,C.br2,1)
         local openPick=false
+        local function setCol(c2) col=c2; h,s,v=Color3.toHSV(c2); sw2.BackgroundColor3=c2; if onChange then onChange(c2) end end
         sw2.MouseButton1Click:Connect(function()
             openPick=not openPick
             if openPick then
@@ -567,23 +557,17 @@ function Peleccos:CreateWindow(o)
                 end)
             else closeOV() end
         end)
-        if flag then
-            CFGSYS.register(flag,
-                function() return col end,
-                function(c2)
-                    col=c2; h,s,v=Color3.toHSV(c2); sw2.BackgroundColor3=c2
-                    if onChange then onChange(c2) end
-                end,
-                "color")
-        end
-        return {Get=function() return col end}
+        return {Get=function() return col end, SetCol=setCol}
     end
 
     swSection("Appearance")
-    swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end, "settings_accentColor")
-    swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end, "settings_bgTint")
+    local _swAC = swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end)
+    CFGSYS.register("settings_accentColor", function() return _swAC.Get() end, function(c) _swAC.SetCol(c) end, "color")
+    local _swBG = swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end)
+    CFGSYS.register("settings_bgTint", function() return _swBG.Get() end, function(c) _swBG.SetCol(c) end, "color")
     swSection("Watermark")
-    swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end, "settings_showWatermark")
+    local _swWM = swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end)
+    CFGSYS.register("settings_showWatermark", function() return _swWM.Get() end, function(v) _swWM.SetVal(v) end, "bool")
     swSection("Copy")
     swButton("Copy Username",    function() pcall(function() setclipboard(LP.Name) end);               notify({Title="Copied",Desc="Username copied.",Type="Success",Duration=2}) end)
     swButton("Copy User ID",     function() pcall(function() setclipboard(tostring(LP.UserId)) end);   notify({Title="Copied",Desc="User ID copied.",Type="Success",Duration=2}) end)
