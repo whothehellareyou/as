@@ -2,8 +2,6 @@
     PeleccosSoftwares UI v13
     BETA VERSION STILL NOT KNOWN BUGS MAY EXIST
     + Zexir.Hook V7 extensions
-    MODIFIED: Category tabs + Settings + Configs moved to top tab bar inside main window
-              Top bar (BAR) completely removed
 ]]
 
 local Players      = game:GetService("Players")
