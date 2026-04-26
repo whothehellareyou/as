@@ -1,5 +1,5 @@
 --[[
-    PeleccosSoftwares UI v12.9
+    PeleccosSoftwares UI v13
     BETA VERSION STILL NOT KNOWN BUGS MAY EXIST
     + Zexir.Hook V7 extensions
     MODIFIED: Category tabs + Settings + Configs moved to top tab bar inside main window
@@ -280,29 +280,35 @@ local function makeConfigSystem(scriptName)
     local function loadCfg(name)
         local ok, data=pcall(function() return HttpService:JSONDecode(readfile(cfgDir..name..".json")) end)
         if not ok or type(data)~="table" then return false end
-        for flag, val in pairs(data) do
+        local function applyEntry(flag, val)
             local info=_flags[flag]
-            if info then
-                local ftype=info.ftype
-                if ftype=="bool" then
-                    pcall(info.set, val=="true")
-                elseif ftype=="number" then
-                    pcall(info.set, tonumber(val) or 0)
-                elseif ftype=="color" then
-                    local sv = tostring(val)
-                    local r,g,b = sv:match("(%d+),(%d+),(%d+)")
-                    if r and g and b then
-                        pcall(info.set, rgb(tonumber(r), tonumber(g), tonumber(b)))
-                    end
-                elseif ftype=="key" then
-                    if val=="Mouse1" then pcall(info.set, Enum.UserInputType.MouseButton1)
-                    elseif val=="Mouse2" then pcall(info.set, Enum.UserInputType.MouseButton2)
-                    elseif val=="Mouse3" then pcall(info.set, Enum.UserInputType.MouseButton3)
-                    else pcall(function() info.set(Enum.KeyCode[val]) end) end
-                else
-                    pcall(info.set, val)
+            if not info then return end
+            local ftype=info.ftype
+            if ftype=="bool" then
+                pcall(info.set, val=="true")
+            elseif ftype=="number" then
+                pcall(info.set, tonumber(val) or 0)
+            elseif ftype=="color" then
+                local sv = tostring(val)
+                local r,g,b = sv:match("(%d+),(%d+),(%d+)")
+                if r and g and b then
+                    pcall(info.set, rgb(tonumber(r), tonumber(g), tonumber(b)))
                 end
+            elseif ftype=="key" then
+                if val=="Mouse1" then pcall(info.set, Enum.UserInputType.MouseButton1)
+                elseif val=="Mouse2" then pcall(info.set, Enum.UserInputType.MouseButton2)
+                elseif val=="Mouse3" then pcall(info.set, Enum.UserInputType.MouseButton3)
+                else pcall(function() info.set(Enum.KeyCode[val]) end) end
+            else
+                pcall(info.set, val)
             end
+        end
+        -- Apply colors first so AC is updated before toggles/sliders reference it
+        for flag, val in pairs(data) do
+            if _flags[flag] and _flags[flag].ftype=="color" then applyEntry(flag, val) end
+        end
+        for flag, val in pairs(data) do
+            if _flags[flag] and _flags[flag].ftype~="color" then applyEntry(flag, val) end
         end
         return true
     end
@@ -574,7 +580,7 @@ function Peleccos:CreateWindow(o)
     swSection("Appearance")
     local _swAC = swColorRow("Accent Color",AC,function(c) AC=c;fireAC() end)
     CFGSYS.register("settings_accentColor", function() return _swAC.Get() end, function(c) _swAC.SetCol(c) end, "color")
-    local _swBG = swColorRow("Background Tint",rgb(6,6,8),function(c) BG_IMG.BackgroundColor3=c; SW_IMG.BackgroundColor3=c; if CFGW_IMG_REF then CFGW_IMG_REF.BackgroundColor3=c end end)
+    local _swBG = swColorRow("Background Tint",C.bg0,function(c) BG.BackgroundColor3=c;SW.BackgroundColor3=c end)
     CFGSYS.register("settings_bgTint", function() return _swBG.Get() end, function(c) _swBG.SetCol(c) end, "color")
     swSection("Watermark")
     local _swWM = swToggle("Show Watermark",true,function(v) CFG.ShowWM=v;WM.Visible=v end)
